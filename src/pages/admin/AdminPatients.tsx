@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, Edit2, Trash2, Search, X, CheckCircle2 } from 'lucide-react';
+import { Eye, Trash2, Search, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData, LoadingState, EmptyState } from '../../hooks/useData';
 import { getAllPatients, suspendAccount } from '../../lib/dataService';
