@@ -528,45 +528,28 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
 @media (max-width: 1024px) {
   .card { padding: 16px; }
   
-  [style*="gridTemplateColumns: 'repeat(4, 1fr)'"],
-  [style*="gridTemplateColumns: 'repeat(4,1fr)'"],
-  [style*="grid-template-columns: repeat(4, 1fr)"],
-  [style*="grid-template-columns: repeat(4,1fr)"] {
+  [style*="grid-template-columns: repeat(4"],
+  [style*="grid-template-columns: repeat(auto-fill, minmax(280px"],
+  [style*="grid-template-columns: repeat(auto-fill, minmax(300px"] {
     grid-template-columns: repeat(2, 1fr) !important;
   }
   
-  [style*="gridTemplateColumns: '60fr 40fr'"],
   [style*="grid-template-columns: 60fr 40fr"] {
     grid-template-columns: 1fr !important;
   }
 }
 
 @media (max-width: 768px) {
-  [style*="gridTemplateColumns: 'repeat(4, 1fr)'"],
-  [style*="gridTemplateColumns: 'repeat(4,1fr)'"],
-  [style*="grid-template-columns: repeat(4, 1fr)"],
-  [style*="grid-template-columns: repeat(4,1fr)"] {
-    grid-template-columns: 1fr !important;
-  }
-  
-  [style*="gridTemplateColumns: 'repeat(3, 1fr)'"],
-  [style*="gridTemplateColumns: 'repeat(3,1fr)'"],
-  [style*="grid-template-columns: repeat(3, 1fr)"],
-  [style*="grid-template-columns: repeat(3,1fr)"] {
-    grid-template-columns: 1fr !important;
-  }
-  
-  [style*="gridTemplateColumns: '1fr 1fr'"],
-  [style*="grid-template-columns: 1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  
-  [style*="gridTemplateColumns: '1fr 2fr'"],
-  [style*="grid-template-columns: 1fr 2fr"] {
+  [style*="grid-template-columns: repeat(4"],
+  [style*="grid-template-columns: repeat(3"],
+  [style*="grid-template-columns: repeat(auto-fill"],
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 1fr 2fr"],
+  [style*="grid-template-columns: 2fr 1fr 1fr auto"] {
     grid-template-columns: 1fr !important;
   }
 
-  [style*="justifyContent: 'space-between'"] {
+  [style*="justify-content: space-between"] {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 12px !important;
@@ -591,3 +574,136 @@ select.input { cursor: pointer; appearance: none; background-image: url("data:im
   .card { padding: 12px; border-radius: 12px; }
   .btn { padding: 8px 16px; font-size: 13px; }
 }
+
+/* ══════════════════════════════════════════════════════
+   LANDING PAGE — RESPONSIVE
+══════════════════════════════════════════════════════ */
+
+/* Hide hamburger on desktop, show nav links */
+.landing-hamburger { display: none !important; }
+.landing-nav-links { display: flex !important; }
+.landing-signin-btn { display: inline-flex !important; }
+
+/* Utility classes for responsive layouts */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-60-40 { display: grid; grid-template-columns: 60fr 40fr; gap: 16px; }
+
+.flex-responsive { display: flex; gap: 10px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-60-40 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .grid-4 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  
+  .flex-responsive { flex-direction: column; align-items: stretch; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 768px) {
+  /* Navbar */
+  .landing-nav-links { display: none !important; }
+  .landing-hamburger { display: flex !important; }
+
+  /* Stats bar: 2×2 on mobile */
+  .landing-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .landing-stat-item {
+    border-right: none !important;
+    border-bottom: 1px solid #2A2A2A;
+    padding: 20px 8px !important;
+  }
+  .landing-stat-item:nth-child(odd) {
+    border-right: 1px solid #2A2A2A !important;
+  }
+  .landing-stat-item:nth-child(3),
+  .landing-stat-item:nth-child(4) {
+    border-bottom: none;
+  }
+
+  /* Modules: stack on mobile */
+  .landing-modules-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  /* Disable sticky on mobile */
+  .landing-modules-grid > div:first-child {
+    position: static !important;
+  }
+
+  /* Footer: stack all columns */
+  .landing-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+
+  /* Footer bottom bar: stack */
+  .landing-footer-bottom {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+
+  /* Features & testimonials: already handled by global grid override */
+}
+
+@media (max-width: 480px) {
+  /* Landing hero padding */
+  section[style*="minHeight: '100vh'"],
+  section[style*='minHeight: "100vh"'] {
+    padding-top: 100px !important;
+    padding-bottom: 60px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   LOGIN PAGE — RESPONSIVE
+══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Hide the decorative left panel on mobile */
+  .login-left-panel { display: none !important; }
+
+  /* Right panel takes full width */
+  .login-right-panel {
+    padding: 40px 24px !important;
+    min-height: 100vh;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   EXTRA SMALL SCREENS (< 480px)
+══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* Role select cards: full width on tiny phones */
+  .role-card { width: 100% !important; }
+
+  /* Landing navbar: reduce padding so logo doesn't clash with hamburger */
+  nav[style*="padding: '0 40px'"],
+  nav[style*='padding: "0 40px"'] {
+    padding: 0 16px !important;
+  }
+
+  /* Stats bar: single column on tiny phones */
+  .landing-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-stat-item:nth-child(odd) {
+    border-right: none !important;
+  }
+  .landing-stat-item {
+    border-bottom: 1px solid #2A2A2A !important;
+  }
+  .landing-stat-item:last-child {
+    border-bottom: none !important;
+  }
+}
+
+

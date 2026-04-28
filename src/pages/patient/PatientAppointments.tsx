@@ -99,7 +99,7 @@ export function PatientAppointments() {
               <div><label className="input-label">Doctor</label>
                 <select name="doctorId" className="input" required>
                   <option value="">Select doctor...</option>
-                  {(doctors ?? []).map(d => <option key={d.id} value={d.id}>{d.full_name} — {d.doctor_profile?.specialization}</option>)}
+                  {(doctors ?? []).filter(d => d.account_status === 'active').map(d => <option key={d.id} value={d.id}>{d.full_name} — {d.doctor_profile?.specialization}</option>)}
                 </select>
               </div>
               <div><label className="input-label">Appointment Type</label>
