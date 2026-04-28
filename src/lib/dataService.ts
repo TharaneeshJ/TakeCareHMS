@@ -59,13 +59,28 @@ export async function updateDoctorProfile(profileId: string, updates: Partial<Do
 export async function getAllDoctors(): Promise<(Profile & { doctor_profile: DoctorProfile })[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*, doctor_profiles(*)')
+    .select(`
+      id,
+      full_name,
+      email,
+      role,
+      doctor_profiles(*)
+    `)
     .eq('role', 'doctor')
-    .order('full_name');
-  if (error) return handleError(error, 'getAllDoctors') as [];
-  return (data ?? []).map((d: Record<string, unknown>) => ({
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    console.error('getAllDoctors error:', error);
+    return [];
+  }
+
+  console.log('Doctors fetched for patient:', data);
+
+  return (data ?? []).map((d: any) => ({
     ...d,
-    doctor_profile: Array.isArray(d.doctor_profiles) ? d.doctor_profiles[0] : d.doctor_profiles,
+    doctor_profile: Array.isArray(d.doctor_profiles)
+      ? d.doctor_profiles[0]
+      : d.doctor_profiles,
   })) as (Profile & { doctor_profile: DoctorProfile })[];
 }
 
