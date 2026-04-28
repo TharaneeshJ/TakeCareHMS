@@ -78,6 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (p) {
             setProfile(p);
             setUser(profileToUser(p));
+          } else {
+            await supabase.auth.signOut();
+            localStorage.clear();
+            sessionStorage.clear();
+            setSession(null);
+            setProfile(null);
+            setUser(null);
           }
         }
       } catch (err) {
@@ -105,8 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === 'SIGNED_OUT') {
+          setSession(null);
           setProfile(null);
           setUser(null);
+          localStorage.clear();
+          sessionStorage.clear();
         }
       }
     );
@@ -150,12 +160,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
-  // Logout
   const logout = async () => {
-    await supabase.auth.signOut();
+    // Clear state immediately so UI updates instantly
     setSession(null);
     setProfile(null);
     setUser(null);
+    localStorage.clear();
+    sessionStorage.clear();
+
+    try {
+      // Race against a 1 second timeout to prevent hanging if network is bad
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise(resolve => setTimeout(resolve, 1000))
+      ]);
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      window.location.href = '/login';
+    }
   };
 
   return (

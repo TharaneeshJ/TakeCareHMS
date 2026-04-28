@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData, LoadingState } from '../../hooks/useData';
-import { getPatientProfile, updateProfile, updatePatientProfile } from '../../lib/dataService';
+import { getPatientProfile, updateProfile, updatePatientProfile, getEmergencyContacts, createEmergencyContact, deleteEmergencyContact } from '../../lib/dataService';
 
 export function PatientProfile() {
   const { user } = useAuth();
@@ -10,7 +10,45 @@ export function PatientProfile() {
     () => user?.id ? getPatientProfile(user.id) : Promise.resolve(null),
     [user?.id]
   );
+  const { data: contacts, refetch: refetchContacts } = useData(
+    () => user?.id ? getEmergencyContacts(user.id) : Promise.resolve([]),
+    [user?.id]
+  );
   const [successMsg, setSuccessMsg] = useState('');
+  const [showAddContact, setShowAddContact] = useState(false);
+
+  const handleAddContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id) return;
+    const fd = new FormData(e.target as HTMLFormElement);
+    try {
+      await createEmergencyContact({
+        patient_id: user.id,
+        contact_name: fd.get('contactName') as string,
+        relationship: fd.get('relationship') as string,
+        phone: fd.get('phone') as string,
+        is_primary: fd.get('isPrimary') === 'on'
+      });
+      setShowAddContact(false);
+      refetchContacts();
+      setSuccessMsg('Emergency contact added.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      setSuccessMsg(`Error: ${err instanceof Error ? err.message : 'Unknown'}`);
+    }
+  };
+
+  const handleDeleteContact = async (id: string) => {
+    if (!confirm('Remove this emergency contact?')) return;
+    try {
+      await deleteEmergencyContact(id);
+      refetchContacts();
+      setSuccessMsg('Contact removed.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      setSuccessMsg(`Error: ${err instanceof Error ? err.message : 'Unknown'}`);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +122,75 @@ export function PatientProfile() {
               <button type="submit" className="btn btn-primary">Save Profile</button>
             </div>
           </form>
+        </div>
+
+        {/* EMERGENCY CONTACTS SECTION */}
+        <div className="card" style={{ gridColumn: '1 / -1' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#0A0A0A' }}>Emergency Contacts</div>
+            <button className="btn btn-secondary" onClick={() => setShowAddContact(true)}>Add Contact</button>
+          </div>
+          
+          {(contacts ?? []).length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: '#737373', background: '#F9FAFB', borderRadius: 8 }}>
+              No emergency contacts added yet.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Relationship</th>
+                    <th>Phone</th>
+                    <th>Primary</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(contacts ?? []).map(c => (
+                    <tr key={c.id}>
+                      <td style={{ fontWeight: 500, color: '#0A0A0A' }}>{c.contact_name}</td>
+                      <td>{c.relationship}</td>
+                      <td>{c.phone}</td>
+                      <td>{c.is_primary ? <span className="badge badge-blue">Yes</span> : <span className="badge badge-gray">No</span>}</td>
+                      <td>
+                        <button className="btn-ghost" style={{ color: '#DC2626', padding: '4px 8px', fontSize: 12 }} onClick={() => handleDeleteContact(c.id)}>
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {showAddContact && (
+            <div className="modal-overlay" onClick={() => setShowAddContact(false)}>
+              <div className="modal-box" onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#0A0A0A' }}>Add Emergency Contact</div>
+                  <button className="btn-ghost" onClick={() => setShowAddContact(false)}>&times;</button>
+                </div>
+                <form onSubmit={handleAddContact} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div><label className="input-label">Contact Name</label><input name="contactName" className="input" required /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div><label className="input-label">Relationship</label><input name="relationship" className="input" placeholder="e.g. Spouse, Parent" required /></div>
+                    <div><label className="input-label">Phone</label><input name="phone" className="input" required /></div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" name="isPrimary" id="isPrimary" />
+                    <label htmlFor="isPrimary" style={{ fontSize: 14, color: '#0A0A0A' }}>Set as primary contact</label>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowAddContact(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save Contact</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

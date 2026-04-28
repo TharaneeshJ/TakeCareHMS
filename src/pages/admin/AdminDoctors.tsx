@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UserCheck, X, CheckCircle2 } from 'lucide-react';
+import { UserCheck, X, CheckCircle2, Mail, Building2, CalendarDays } from 'lucide-react';
 import { useData, LoadingState, EmptyState } from '../../hooks/useData';
 import { getAllDoctors, approveDoctor, suspendAccount } from '../../lib/dataService';
 import { supabase } from '../../lib/supabase';
@@ -85,9 +85,9 @@ export function AdminDoctors() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: '#525252' }}>
-                <div>📧 {d.email}</div>
-                <div>🏥 {d.doctor_profile?.department ?? 'General'}</div>
-                <div>📅 {d.doctor_profile?.experience_years ?? 0} years experience</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Mail size={14} color="#A3A3A3" /> {d.email}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Building2 size={14} color="#A3A3A3" /> {d.doctor_profile?.department ?? 'General'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><CalendarDays size={14} color="#A3A3A3" /> {d.doctor_profile?.experience_years ?? 0} years experience</div>
                 <div>Status: <span className={`badge ${d.account_status === 'active' ? 'badge-green' : d.account_status === 'suspended' ? 'badge-red' : 'badge-amber'}`}>{d.account_status}</span></div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>

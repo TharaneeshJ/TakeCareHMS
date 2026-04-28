@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { Menu, Bell, Search, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, Bell, Search, ChevronDown, LogOut, User } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -36,9 +36,27 @@ const pageTitles: Record<string, string> = {
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const pageTitle = pageTitles[location.pathname] ?? 'TakeCare HMS';
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div className="app-layout">
@@ -82,17 +100,52 @@ export function DashboardLayout() {
               }} />
             </button>
 
-            {/* Avatar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: '#F5F5F5', color: '#525252',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '12px', fontWeight: 600,
-              }}>
-                {user?.initials}
+            {/* Avatar Dropdown */}
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <div 
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px' }}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: '#F5F5F5', color: '#525252',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '12px', fontWeight: 600,
+                }}>
+                  {user?.initials}
+                </div>
+                <ChevronDown size={14} strokeWidth={1.5} style={{ color: 'var(--text-3)' }} />
               </div>
-              <ChevronDown size={14} strokeWidth={1.5} style={{ color: 'var(--text-3)' }} />
+
+              {dropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                  width: 200, background: '#fff', borderRadius: 8,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #E5E5E5',
+                  zIndex: 50, padding: '8px'
+                }}>
+                  <div style={{ padding: '8px 12px', borderBottom: '1px solid #E5E5E5', marginBottom: '4px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0A0A0A' }}>{user?.name}</div>
+                    <div style={{ fontSize: 11, color: '#737373', textTransform: 'capitalize' }}>{user?.role}</div>
+                  </div>
+                  <div 
+                    style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#525252', borderRadius: 4 }}
+                    onClick={() => { setDropdownOpen(false); navigate(`/${user?.role}/profile`); }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F5F5F5'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <User size={14} /> My Profile
+                  </div>
+                  <div 
+                    style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#DC2626', borderRadius: 4 }}
+                    onClick={handleLogout}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <LogOut size={14} /> Sign out
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>

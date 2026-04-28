@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData, LoadingState } from '../../hooks/useData';
-import { getDoctorProfile, updateProfile, updateDoctorProfile } from '../../lib/dataService';
+import { getDoctorProfile, updateProfile, updateDoctorProfile, getDoctorSchedules, upsertDoctorSchedule } from '../../lib/dataService';
 
 export function DoctorProfile() {
   const { user } = useAuth();
@@ -10,7 +10,34 @@ export function DoctorProfile() {
     () => user?.id ? getDoctorProfile(user.id) : Promise.resolve(null),
     [user?.id]
   );
+  const { data: schedules, refetch: refetchSchedules } = useData(
+    () => user?.id ? getDoctorSchedules(user.id) : Promise.resolve([]),
+    [user?.id]
+  );
   const [successMsg, setSuccessMsg] = useState('');
+  const [editingSchedule, setEditingSchedule] = useState<number | null>(null);
+
+  const handleSaveSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id || editingSchedule === null) return;
+    const fd = new FormData(e.target as HTMLFormElement);
+    try {
+      await upsertDoctorSchedule({
+        doctor_id: user.id,
+        day_of_week: editingSchedule,
+        start_time: fd.get('startTime') as string,
+        end_time: fd.get('endTime') as string,
+        slot_duration: parseInt(fd.get('slotDuration') as string, 10),
+        is_active: fd.get('isActive') === 'on'
+      });
+      setEditingSchedule(null);
+      refetchSchedules();
+      setSuccessMsg('Schedule updated.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      setSuccessMsg(`Error: ${err instanceof Error ? err.message : 'Unknown'}`);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +103,64 @@ export function DoctorProfile() {
               <button type="submit" className="btn btn-primary">Save Profile</button>
             </div>
           </form>
+        </div>
+
+        {/* DOCTOR SCHEDULES SECTION */}
+        <div className="card" style={{ gridColumn: '1 / -1' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#0A0A0A' }}>Weekly Schedule</div>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((dayName, idx) => {
+              const schedule = (schedules ?? []).find(s => s.day_of_week === idx);
+              return (
+                <div key={idx} style={{ padding: '16px', border: '1px solid #E5E5E5', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+                    <div style={{ fontWeight: 600, width: 100 }}>{dayName}</div>
+                    {schedule?.is_active ? (
+                      <div style={{ display: 'flex', gap: 16, fontSize: 14, color: '#525252' }}>
+                        <span>{schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}</span>
+                        <span>{schedule.slot_duration} min slots</span>
+                        <span className="badge badge-green">Active</span>
+                      </div>
+                    ) : (
+                      <span className="badge badge-gray">Off Duty</span>
+                    )}
+                  </div>
+                  <button className="btn-ghost" style={{ fontSize: 14, color: '#2563EB' }} onClick={() => setEditingSchedule(idx)}>
+                    Edit
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {editingSchedule !== null && (
+            <div className="modal-overlay" onClick={() => setEditingSchedule(null)}>
+              <div className="modal-box" onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <div style={{ fontSize: 18, fontWeight: 600 }}>Edit Schedule - {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][editingSchedule]}</div>
+                  <button className="btn-ghost" onClick={() => setEditingSchedule(null)}>&times;</button>
+                </div>
+                <form onSubmit={handleSaveSchedule} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input type="checkbox" name="isActive" id="isActive" defaultChecked={(schedules ?? []).find(s => s.day_of_week === editingSchedule)?.is_active ?? true} />
+                    <label htmlFor="isActive" style={{ fontWeight: 500 }}>Active/Working Day</label>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div><label className="input-label">Start Time</label><input type="time" name="startTime" className="input" defaultValue={(schedules ?? []).find(s => s.day_of_week === editingSchedule)?.start_time ?? '09:00:00'} required /></div>
+                    <div><label className="input-label">End Time</label><input type="time" name="endTime" className="input" defaultValue={(schedules ?? []).find(s => s.day_of_week === editingSchedule)?.end_time ?? '17:00:00'} required /></div>
+                  </div>
+                  <div><label className="input-label">Slot Duration (mins)</label><input type="number" name="slotDuration" className="input" defaultValue={(schedules ?? []).find(s => s.day_of_week === editingSchedule)?.slot_duration ?? 30} required min={5} step={5} /></div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 16 }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setEditingSchedule(null)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save Schedule</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
